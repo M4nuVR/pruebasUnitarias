@@ -1,5 +1,6 @@
 package edu.ucc.juegosdemesa.model;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ReservaTest {
 
     @Test
+    @DisplayName("Debe considerar una reserva activa como no vencida antes de la fecha límite")
     void reservaActivaVenceEnSuFechaLimite() {
         LocalDateTime creada = LocalDateTime.now();
         Reserva reserva = new Reserva(
@@ -25,6 +27,7 @@ class ReservaTest {
     }
 
     @Test
+    @DisplayName("Debe ignorar la expiración cuando la reserva ya fue convertida")
     void reservaConvertidaNoSeConsideraVencida() {
         LocalDateTime creada = LocalDateTime.now();
         Reserva reserva = new Reserva(
