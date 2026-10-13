@@ -1,0 +1,88 @@
+package edu.ucc.juegosdemesa.model;
+
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ReglasDeNegocioTest {
+
+    @Test
+    void reservaActivaNoSeConsideraVencidaAntesDeLaFechaLimite() {
+        LocalDateTime creada = LocalDateTime.of(2026, 10, 1, 9, 0);
+        Reserva reserva = new Reserva(
+                new Ejemplar("R-001", EstadoEjemplar.RESERVADO,
+                        new Juego("Catan", "Estrategia", 3, 4, 60)),
+                new Usuario("2026001", "Ana", "ana@ucc.edu", Rol.ESTUDIANTE),
+                creada,
+                creada.plusHours(24)
+        );
+
+        assertFalse(reserva.estaVencida(creada.plusHours(23)));
+    }
+
+    @Test
+    void reservaActivaSeConsideraVencidaEnLaFechaLimite() {
+        LocalDateTime creada = LocalDateTime.of(2026, 10, 1, 9, 0);
+        Reserva reserva = new Reserva(
+                new Ejemplar("R-002", EstadoEjemplar.RESERVADO,
+                        new Juego("Puerto Rico", "Estrategia", 2, 5, 90)),
+                new Usuario("2026002", "Luis", "luis@ucc.edu", Rol.PROFESOR),
+                creada,
+                creada.plusHours(24)
+        );
+
+        assertTrue(reserva.estaVencida(creada.plusHours(24)));
+    }
+
+    @Test
+    void reservaConvertidaNoSeConsideraVencida() {
+        LocalDateTime creada = LocalDateTime.of(2026, 10, 1, 9, 0);
+        Reserva reserva = new Reserva(
+                new Ejemplar("R-003", EstadoEjemplar.RESERVADO,
+                        new Juego("Ticket to Ride", "Familia", 2, 5, 45)),
+                new Usuario("2026003", "Marta", "marta@ucc.edu", Rol.ESTUDIANTE),
+                creada,
+                creada.plusHours(1)
+        );
+
+        reserva.cambiarEstado(EstadoReserva.CONVERTIDA);
+
+        assertFalse(reserva.estaVencida(creada.plusHours(2)));
+        assertEquals(EstadoReserva.CONVERTIDA, reserva.getEstado());
+    }
+
+    @Test
+    void prestamoNuevoEsActivoYPuedeTransferirseLaPosesion() {
+        Usuario profesor = new Usuario("P-01", "Profesor", "profesor@ucc.edu", Rol.PROFESOR);
+        Usuario estudiante = new Usuario("E-01", "Estudiante", "estudiante@ucc.edu", Rol.ESTUDIANTE);
+        Ejemplar ejemplar = new Ejemplar("P-100", EstadoEjemplar.DISPONIBLE,
+                new Juego("Azul", "Familia", 2, 4, 30));
+
+        Prestamo prestamo = Prestamo.iniciar(ejemplar, profesor, "Entrega inicial");
+
+        assertTrue(prestamo.estaActivo());
+        assertNull(prestamo.getEstudiantePoseedorActual());
+
+        prestamo.transferirA(estudiante);
+
+        assertEquals(estudiante, prestamo.getEstudiantePoseedorActual());
+        assertEquals("Entrega inicial", prestamo.getObservaciones());
+    }
+
+    @Test
+    void ejemplarActualizaEstadoYAgregaComponenteCorrectamente() {
+        Juego juego = new Juego("Dominó", "Familiar", 2, 4, 20);
+        Ejemplar ejemplar = new Ejemplar("E-200", EstadoEjemplar.DISPONIBLE, juego);
+        Componente componente = new Componente("Fichas", 28);
+
+        ejemplar.actualizarEstado(EstadoEjemplar.RESERVADO);
+        ejemplar.agregarComponente(componente);
+
+        assertEquals(EstadoEjemplar.RESERVADO, ejemplar.getEstado());
+        assertEquals(1, ejemplar.getComponentes().size());
+        assertEquals("Fichas", ejemplar.getComponentes().get(0).getNombre());
+        assertEquals(28, ejemplar.getComponentes().get(0).getCantidad());
+    }
+}
